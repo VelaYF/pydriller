@@ -21,7 +21,7 @@ import os
 from pathlib import Path
 from typing import List, Dict, Optional, Set, Generator
 
-from git import Repo, GitCommandError
+from git import Repo, GitCommandError, Diff
 from git.objects import Commit as GitCommit
 
 from pydriller.domain.commit import Commit, ModificationType, ModifiedFile
@@ -244,6 +244,14 @@ class Git:
         return self._calculate_last_commits(commit, modifications,
                                             hashes_to_ignore_path)
 
+    @staticmethod
+    def diff(from_commit: GitCommit, to_commit: GitCommit) -> List[Diff]:
+        git_diff = from_commit.diff(
+            other=to_commit,
+            paths=None,
+            create_patch=True)
+        return git_diff
+
     def _calculate_last_commits(self, commit: Commit,
                                 modifications: List[ModifiedFile],
                                 hashes_to_ignore_path: Optional[str] = None) \
@@ -294,12 +302,12 @@ class Git:
         # this covers comments in Java and Python, as well as empty lines.
         # More have to be added!
         return not line or \
-               line.startswith('//') or \
-               line.startswith('#') or \
-               line.startswith("/*") or \
-               line.startswith("'''") or \
-               line.startswith('"""') or \
-               line.startswith("*")
+            line.startswith('//') or \
+            line.startswith('#') or \
+            line.startswith("/*") or \
+            line.startswith("'''") or \
+            line.startswith('"""') or \
+            line.startswith("*")
 
     def get_commits_modified_file(self, filepath: str, include_deleted_files=False) -> List[str]:
         """
